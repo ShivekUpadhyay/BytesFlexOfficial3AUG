@@ -1,0 +1,150 @@
+import { supabase } from '@/lib/supabase';
+import type { Video, VideoWithEpisodes, Series, Episode } from '@/types';
+
+export interface VideoQueryOptions {
+  genre?: string;
+  type?: 'movie' | 'series';
+  featured?: boolean;
+  trending?: boolean;
+  limit?: number;
+  orderBy?: 'created_at' | 'views' | 'rating' | 'year';
+  ascending?: boolean;
+}
+
+export async function fetchVideos(opts: VideoQueryOptions = {}): Promise<Video[]> {
+  let query = supabase.from('videos').select('*').eq('status', 'published');
+
+  if (opts.genre) query = query.eq('genre', opts.genre);
+  if (opts.type) query = query.eq('type', opts.type);
+  if (opts.featured !== undefined) query = query.eq('featured', opts.featured);
+  if (opts.trending !== undefined) query = query.eq('trending', opts.trending);
+
+  const order = opts.orderBy ?? 'created_at';
+  const ascending = opts.ascending ?? false;
+  query = query.order(order, { ascending });
+
+  if (opts.limit) query = query.limit(opts.limit);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as Video[];
+}
+
+export async function fetchVideoById(id: string): Promise<Video | null> {
+  const { data, error } = await supabase
+    .from('videos')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return data as Video | null;
+}
+
+export async function fetchFeaturedHero(): Promise<Video | null> {
+  const { data, error } = await supabase
+    .from('videos')
+    .select('*')
+    .eq('status', 'published')
+    .eq('featured', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (data) return data as Video;
+  // Fallback: latest published video
+  const { data: fallback, error: err2 } = await supabase
+    .from('videos')
+    .select('*')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (err2) throw err2;
+  return (fallback as Video) ?? null;
+}
+
+export async function fetchRelatedVideos(video: Video, limit = 8): Promise<Video[]> {
+  const { data, error } = await supabase
+    .from('videos')
+    .select('*')
+    .eq('status', 'published')
+    .neq('id', video.id)
+    .or(`genre.eq.${video.genre ?? ''},type.eq.${video.type}`)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as Video[];
+}
+
+export async function searchVideos(query: string): Promise<Video[]> {
+  const term = query.trim();
+  if (!term) return [];
+  const { data, error } = await supabase
+    .from('videos')
+    .select('*')
+    .eq('status', 'published')
+    .or(
+      `title.ilike.%${term}%,description.ilike.%${term}%,genre.ilike.%${term}%,language.ilike.%${term}%,tags.cs.{${term}}`
+    )
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data ?? []) as Video[];
+}
+
+export async function fetchSeries(): Promise<Series[]> {
+  const { data, error } = await supabase
+    .from('series')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as Series[];
+}
+
+export async function fetchSeriesById(id: string): Promise<Series | null> {
+  const { data, error } = await supabase
+    .from('series')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return data as Series | null;
+}
+
+export async function fetchEpisodesBySeries(seriesId: string): Promise<Episode[]> {
+  const { data, error } = await supabase
+    .from('episodes')
+    .select('*')
+    .eq('series_id', seriesId)
+    .order('season_number', { ascending: true })
+    .order('episode_number', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as Episode[];
+}
+
+export async function fetchEpisodesForVideo(videoId: string): Promise<Episode[]> {
+  const { data, error } = await supabase
+    .from('episodes')
+    .select('*')
+    .eq('video_id', videoId);
+  if (error) throw error;
+  return (data ?? []) as Episode[];
+}
+
+export async function fetchVideoWithEpisodes(id: string): Promise<VideoWithEpisodes | null> {
+  const video = await fetchVideoById(id);
+  if (!video) return null;
+  const episodes = await fetchEpisodesForVideo(id);
+  return { ...video, episodes };
+}
+
+export async function incrementViews(videoId: string): Promise<void> {
+  const { error } = await supabase.rpc('increment_video_views', { video_id: videoId });
+  if (error) {
+    // Fallback: read-modify-write (best-effort, not atomic)
+    const { data } = await supabase.from('videos').select('views').eq('id', videoId).maybeSingle();
+    if (data) {
+      await supabase.from('videos').update({ views: (data.views ?? 0) + 1 }).eq('id', videoId);
+    }
+  }
+}
