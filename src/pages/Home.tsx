@@ -32,13 +32,17 @@ export default function Home() {
 
   useEffect(() => {
     let mounted = true;
+
+    const safe = <T,>(p: Promise<T>, fallback: T): Promise<T> =>
+      p.catch(() => fallback);
+
     (async () => {
       try {
         const [heroVideo, trendingVids, recentVids, popularVids] = await Promise.all([
-          fetchFeaturedHero(),
-          fetchVideos({ trending: true, limit: 20 }),
-          fetchVideos({ limit: 20, orderBy: 'created_at' }),
-          fetchVideos({ limit: 20, orderBy: 'views' }),
+          safe(fetchFeaturedHero(), null),
+          safe(fetchVideos({ trending: true, limit: 20 }), []),
+          safe(fetchVideos({ limit: 20, orderBy: 'created_at' }), []),
+          safe(fetchVideos({ limit: 20, orderBy: 'views' }), []),
         ]);
 
         if (!mounted) return;
@@ -47,33 +51,38 @@ export default function Home() {
         setRecent(recentVids);
         setPopular(popularVids);
 
-        // Fetch genre rows in parallel
+        // Fetch genre rows in parallel — each isolated so one failure doesn't break others
         const genreResults = await Promise.all(
-          GENRE_ROWS.map((g) => fetchVideos({ genre: g, limit: 20 }).then((v) => [g, v] as const))
+          GENRE_ROWS.map((g) =>
+            safe(fetchVideos({ genre: g, limit: 20 }), []).then((v) => [g, v] as const)
+          )
         );
         if (!mounted) return;
         const map: Record<string, Video[]> = {};
         for (const [g, vids] of genreResults) map[g] = vids;
         setGenreMap(map);
-        const [trending, latest, newReleases, recommended] = await Promise.all([
-          fetchAnimeList({ trending: true, limit: 20 }),
-          fetchAnimeList({ limit: 20, orderBy: 'created_at' }),
-          fetchAnimeList({ limit: 20, orderBy: 'created_at', type: 'series' }),
-          fetchAnimeList({ limit: 20, orderBy: 'rating' }),
+
+        // Anime rows — isolated from main content
+        const [aTrending, aLatest, aNew, aRec] = await Promise.all([
+          safe(fetchAnimeList({ trending: true, limit: 20 }), []),
+          safe(fetchAnimeList({ limit: 20, orderBy: 'created_at' }), []),
+          safe(fetchAnimeList({ limit: 20, orderBy: 'created_at', type: 'series' }), []),
+          safe(fetchAnimeList({ limit: 20, orderBy: 'rating' }), []),
         ]);
         if (!mounted) return;
-        setAnimeTrending(trending);
-        setAnimeLatest(latest);
-        setAnimeNew(newReleases);
-        setAnimeRecommended(recommended);
+        setAnimeTrending(aTrending);
+        setAnimeLatest(aLatest);
+        setAnimeNew(aNew);
+        setAnimeRecommended(aRec);
 
         // Continue watching (only for logged-in users)
         if (user) {
-          const cw = await fetchContinueWatchingWithVideos(user.id);
+          const cw = await safe(fetchContinueWatchingWithVideos(user.id), []);
           if (mounted) setContinueWatching(cw);
         }
-      } catch (err) {
-        if (mounted) setError(err instanceof Error ? err.message : 'Failed to load content');
+      } catch {
+        // Only show the full-page error if the primary content fetches failed
+        if (mounted) setError('Failed to load content');
       } finally {
         if (mounted) setLoading(false);
       }

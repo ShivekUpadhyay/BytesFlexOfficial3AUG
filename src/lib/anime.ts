@@ -28,7 +28,9 @@ export async function fetchAnimeList(opts: {
   if (opts.status) q = q.eq('status', opts.status);
   if (opts.type) q = q.eq('type', opts.type);
   if (opts.genre) {
-    q = q.in('id', await animeIdsForGenre(opts.genre));
+    const ids = await animeIdsForGenre(opts.genre);
+    if (!ids.length) return [];
+    q = q.in('id', ids);
   }
   const order = opts.orderBy ?? 'created_at';
   const ascending = opts.ascending ?? false;
