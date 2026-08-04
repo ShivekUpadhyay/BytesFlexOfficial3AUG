@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   Film, Users, Eye, HardDrive, TrendingUp, Clock,
   UploadCloud, ListVideo, Settings, Users as UsersIcon,
-  CheckCircle, FileEdit, EyeOff,
+  CheckCircle, FileEdit, EyeOff, Sparkles,
 } from 'lucide-react';
 import { fetchAdminStats } from '@/lib/admin';
 import { formatViews, formatDate } from '@/lib/utils';
@@ -11,14 +11,18 @@ import { UploadForm } from '@/components/admin/UploadForm';
 import { VideoManagement } from '@/components/admin/VideoManagement';
 import { SettingsPanel } from '@/components/admin/SettingsPanel';
 import { UserManagement } from '@/components/admin/UserManagement';
+import { AnimeUploadForm } from '@/components/admin/AnimeUploadForm';
+import { AnimeManagement } from '@/components/admin/AnimeManagement';
 import type { AdminStats } from '@/lib/admin';
 
-type Tab = 'overview' | 'upload' | 'videos' | 'users' | 'settings';
+type Tab = 'overview' | 'upload' | 'videos' | 'anime-upload' | 'anime' | 'users' | 'settings';
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: 'Overview', icon: <TrendingUp className="h-4 w-4" /> },
   { id: 'upload', label: 'Upload', icon: <UploadCloud className="h-4 w-4" /> },
   { id: 'videos', label: 'Videos', icon: <ListVideo className="h-4 w-4" /> },
+  { id: 'anime-upload', label: 'Anime Upload', icon: <Sparkles className="h-4 w-4" /> },
+  { id: 'anime', label: 'Anime', icon: <Sparkles className="h-4 w-4" /> },
   { id: 'users', label: 'Users', icon: <UsersIcon className="h-4 w-4" /> },
   { id: 'settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> },
 ];
@@ -74,6 +78,8 @@ export default function AdminDashboard() {
         )}
         {tab === 'upload' && <UploadForm onUploaded={loadStats} />}
         {tab === 'videos' && <VideoManagement />}
+        {tab === 'anime-upload' && <AnimeUploadForm onUploaded={loadStats} />}
+        {tab === 'anime' && <AnimeManagement />}
         {tab === 'users' && <UserManagement />}
         {tab === 'settings' && <SettingsPanel />}
       </div>

@@ -16,6 +16,10 @@ const SearchResults = lazy(() => import('@/pages/SearchResults'));
 const Watch = lazy(() => import('@/pages/Watch'));
 const MyList = lazy(() => import('@/pages/MyList'));
 const ContinueWatching = lazy(() => import('@/pages/ContinueWatching'));
+const AnimePage = lazy(() => import('@/pages/Anime'));
+const AnimeDetails = lazy(() => import('@/pages/AnimeDetails'));
+const WatchAnime = lazy(() => import('@/pages/WatchAnime'));
+const MyAnimeList = lazy(() => import('@/pages/MyAnimeList'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
@@ -47,6 +51,9 @@ function App() {
                 <Route path="/trending" element={<Trending />} />
                 <Route path="/search" element={<SearchResults />} />
                 <Route path="/watch/:id" element={<Watch />} />
+                <Route path="/anime" element={<AnimePage />} />
+                <Route path="/anime/:id" element={<AnimeDetails />} />
+                <Route path="/anime/watch/:animeId/:episodeId" element={<WatchAnime />} />
                 <Route
                   path="/my-list"
                   element={
@@ -60,6 +67,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <ContinueWatching />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/my-anime"
+                  element={
+                    <ProtectedRoute>
+                      <MyAnimeList />
                     </ProtectedRoute>
                   }
                 />
