@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Film, Users, Eye, HardDrive, TrendingUp, Clock,
-  UploadCloud, ListVideo, Settings, Users as UsersIcon,
-  CheckCircle, FileEdit, EyeOff, Sparkles,
-} from 'lucide-react';
+import { Film, Users, Eye, HardDrive, TrendingUp, Clock, UploadCloud, ListVideo, Settings, Users as UsersIcon, CheckCircle, File as FileEdit, EyeOff, Sparkles } from 'lucide-react';
 import { fetchAdminStats } from '@/lib/admin';
 import { formatViews, formatDate } from '@/lib/utils';
 import { UploadForm } from '@/components/admin/UploadForm';
