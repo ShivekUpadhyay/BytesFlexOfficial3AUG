@@ -92,7 +92,7 @@ export function UploadForm({ onUploaded }: UploadFormProps) {
       return;
     }
     if (videoMode === 'external' && detectVideoProvider(videoUrl.trim()) === 'unknown') {
-      setError('Unsupported URL. Please use a link from YouTube, Vimeo, Dailymotion, Streamable, Loom, Wistia, ScreenApp, or a direct MP4/WebM/HLS (.m3u8) URL.');
+      setError('Please enter a valid URL. Supports YouTube, Vimeo, Dailymotion, Streamable, Loom, Wistia, ScreenApp, direct MP4/WebM/HLS, or any embeddable iframe URL.');
       return;
     }
 
@@ -351,7 +351,7 @@ export function UploadForm({ onUploaded }: UploadFormProps) {
                   value={videoUrl}
                   onChange={(e) => setVideoUrl(e.target.value)}
                   className="input-field"
-                  placeholder="Paste a YouTube, Vimeo, Dailymotion, Streamable, Loom, Wistia, ScreenApp, or direct video URL"
+                  placeholder="Paste a YouTube, Vimeo, Dailymotion, Streamable, Loom, Wistia, ScreenApp, direct video, or any embeddable URL"
                 />
                 {(() => {
                   const info = getVideoSourceInfo(videoUrl.trim());
@@ -370,7 +370,7 @@ export function UploadForm({ onUploaded }: UploadFormProps) {
                     </div>
                   );
                 })()}
-                <p className="text-xs text-neutral-500">Supports YouTube, Vimeo, Dailymotion, Streamable, Loom, Wistia, ScreenApp, and direct MP4/WebM/HLS (.m3u8) URLs.</p>
+                <p className="text-xs text-neutral-500">Supports YouTube, Vimeo, Dailymotion, Streamable, Loom, Wistia, ScreenApp, direct MP4/WebM/HLS (.m3u8), and any other embeddable iframe URL.</p>
               </div>
             )}
           </div>

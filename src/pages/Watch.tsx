@@ -165,7 +165,22 @@ export default function Watch() {
       <div className="mx-auto max-w-6xl px-4 pt-4 sm:px-6">
         {(() => {
           const provider = detectVideoProvider(video.video_url);
-          if (['youtube', 'vimeo', 'dailymotion', 'streamable', 'loom', 'wistia', 'screenapp'].includes(provider)) {
+          if (provider === 'direct' || provider === 'hls') {
+            return (
+              <VideoPlayer
+                key={video.id}
+                src={video.video_url}
+                poster={video.poster_url ?? undefined}
+                initialPosition={resumePosition}
+                onProgress={handleProgress}
+                onEnded={handleEnded}
+                autoPlay
+                nextEpisodeLabel={nextEpisodeLabel}
+                onNextEpisode={nextEpisodeLabel ? handleNextEpisode : undefined}
+              />
+            );
+          }
+          if (provider !== 'unknown') {
             return <EmbedPlayer url={video.video_url} title={video.title} autoPlay />;
           }
           return (

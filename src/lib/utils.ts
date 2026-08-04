@@ -58,6 +58,7 @@ export type VideoProvider =
   | 'screenapp'
   | 'hls'
   | 'direct'
+  | 'generic'
   | 'unknown';
 
 export interface VideoSourceInfo {
@@ -119,6 +120,15 @@ function isDirectVideoUrl(url: string): boolean {
   return /\.(mp4|webm)(\?.*)?$/i.test(url);
 }
 
+function isEmbeddableUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export function detectVideoProvider(url: string): VideoProvider {
   const u = url.trim().toLowerCase();
   if (getYouTubeId(u)) return 'youtube';
@@ -130,6 +140,7 @@ export function detectVideoProvider(url: string): VideoProvider {
   if (getScreenappId(u)) return 'screenapp';
   if (isHlsUrl(u)) return 'hls';
   if (isDirectVideoUrl(u)) return 'direct';
+  if (isEmbeddableUrl(url.trim())) return 'generic';
   return 'unknown';
 }
 
@@ -164,6 +175,8 @@ export function getVideoSourceInfo(url: string): VideoSourceInfo {
       const id = getScreenappId(u);
       return { provider, id, embedUrl: id ? `https://screenapp.io/app/v/${id}` : null };
     }
+    case 'generic':
+      return { provider, id: null, embedUrl: u };
     default:
       return { provider, id: null, embedUrl: null };
   }
@@ -171,11 +184,16 @@ export function getVideoSourceInfo(url: string): VideoSourceInfo {
 
 export function isEmbeddableProvider(url: string): boolean {
   const p = detectVideoProvider(url);
-  return ['youtube', 'vimeo', 'dailymotion', 'streamable', 'loom', 'wistia', 'screenapp'].includes(p);
+  return ['youtube', 'vimeo', 'dailymotion', 'streamable', 'loom', 'wistia', 'screenapp', 'generic'].includes(p);
 }
 
 export function isExternalVideoUrl(url: string): boolean {
   return detectVideoProvider(url) !== 'unknown';
+}
+
+export function isHtml5VideoUrl(url: string): boolean {
+  const p = detectVideoProvider(url);
+  return p === 'direct' || p === 'hls';
 }
 
 export function getInitials(name: string): string {
