@@ -146,7 +146,7 @@ export async function updateSettings(patch: Partial<SiteSettings>): Promise<Site
 }
 
 export async function setUserAdmin(userId: string, isAdmin: boolean): Promise<void> {
-  const { error } = await supabase.from('profiles').update({ is_admin: isAdmin }).eq('id', userId);
+  const { error } = await supabase.rpc('set_user_admin', { target_uid: userId, make_admin: isAdmin });
   if (error) throw error;
 }
 
