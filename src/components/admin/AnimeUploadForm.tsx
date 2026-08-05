@@ -128,7 +128,14 @@ export function AnimeUploadForm({ onUploaded }: AnimeUploadFormProps) {
       reset();
       onUploaded();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('row-level security') || msg.includes('policy')) {
+        setError('You do not have admin permissions. Please make sure your account is set up as an admin.');
+      } else if (msg.includes('storage') || msg.includes('bucket')) {
+        setError('Failed to upload files to storage. Please try again.');
+      } else {
+        setError(msg || 'Upload failed. Please try again.');
+      }
     } finally {
       setUploading(false);
     }
