@@ -5,7 +5,6 @@ const FOOTER_LINKS = [
   { label: 'Home', path: '/' },
   { label: 'Movies', path: '/movies' },
   { label: 'Series', path: '/series' },
-  { label: 'Anime', path: '/anime' },
   { label: 'Trending', path: '/trending' },
   { label: 'My List', path: '/my-list' },
 ];

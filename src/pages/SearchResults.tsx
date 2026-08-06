@@ -1,21 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search as SearchIcon, AlertCircle, X, Sparkles } from 'lucide-react';
+import { Search as SearchIcon, AlertCircle, X } from 'lucide-react';
 import { VideoCard } from '@/components/VideoCard';
-import { AnimeCard } from '@/components/AnimeCard';
 import { SkeletonGrid } from '@/components/Skeletons';
 import { searchVideos } from '@/lib/videos';
-import { searchAnime } from '@/lib/anime';
 import type { Video } from '@/types';
-import type { Anime as AnimeType } from '@/types';
 
 export default function SearchResults() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') ?? '';
   const [input, setInput] = useState(query);
   const [results, setResults] = useState<Video[]>([]);
-  const [animeResults, setAnimeResults] = useState<AnimeType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,20 +19,16 @@ export default function SearchResults() {
     setInput(query);
     if (!query.trim()) {
       setResults([]);
-      setAnimeResults([]);
       return;
     }
     let mounted = true;
     setLoading(true);
     setError(null);
-    Promise.all([
-      searchVideos(query).catch(() => [] as Video[]),
-      searchAnime(query).catch(() => [] as AnimeType[]),
-    ])
-      .then(([vids, anime]) => {
+    searchVideos(query)
+      .catch(() => [] as Video[])
+      .then((vids) => {
         if (!mounted) return;
         setResults(vids);
-        setAnimeResults(anime);
       })
       .catch((err) => {
         if (mounted) setError(err instanceof Error ? err.message : 'Search failed');
@@ -80,7 +72,7 @@ export default function SearchResults() {
 
       {query && (
         <p className="mt-4 text-sm text-neutral-400">
-          {loading ? 'Searching...' : `${results.length + animeResults.length} result${(results.length + animeResults.length) !== 1 ? 's' : ''} for "${query}"`}
+          {loading ? 'Searching...' : `${results.length} result${results.length !== 1 ? 's' : ''} for "${query}"`}
         </p>
       )}
 
@@ -97,7 +89,7 @@ export default function SearchResults() {
           <h2 className="text-lg font-semibold text-neutral-400">Start searching</h2>
           <p className="mt-1 text-sm text-neutral-600">Type in the search box above to find content.</p>
         </div>
-      ) : results.length === 0 && animeResults.length === 0 ? (
+      ) : results.length === 0 ? (
         <div className="flex min-h-[40vh] flex-col items-center justify-center text-center">
           <SearchIcon className="mb-4 h-12 w-12 text-neutral-700" />
           <h2 className="text-lg font-semibold text-neutral-400">No results found</h2>
@@ -111,18 +103,6 @@ export default function SearchResults() {
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {results.map((video, i) => (
                   <VideoCard key={video.id} video={video} index={i} />
-                ))}
-              </div>
-            </div>
-          )}
-          {animeResults.length > 0 && (
-            <div>
-              <h2 className="mb-4 flex items-center gap-2 font-display text-2xl tracking-wide text-white">
-                <Sparkles className="h-6 w-6 text-primary" /> Anime
-              </h2>
-              <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-4">
-                {animeResults.map((a, i) => (
-                  <AnimeCard key={a.id} anime={a} index={i} />
                 ))}
               </div>
             </div>
